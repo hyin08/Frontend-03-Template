@@ -14,13 +14,31 @@ function addCSSRules(text) {
 }
 
 function match(element, selector) {
+    if(!selector || !element.attributes)
+        return false;
+    
+    if(selector.charAt(0) == "#") {
+        var attr = element.attributes.filter(attr => attr.name === "id")[0];
+        if(attr && attr.value === selector.replace("#", ''))
+            return true;
+    } else if(selector.charAt(0) == ".") {
+        var attr = element.attributes.filter(attr => attr.name === "class")[0];
+        // todo: 只要value里有一个匹配就返回true
+        if(attr && attr.value === selector.replace(".", ''))
+            return true;
+    } else {
+        if(element.tagName === selector) {
+            return true;
+        }
+    }
 
+    return false;
 }
 
 function computeCSS(element) {
     //获取父元素序列
     var elements = stack.slice().reverse();
-    if(element.computedStyle)
+    if(!element.computedStyle)
         element.computedStyle = {};
     
     // toyBrowser假设一个复杂选择器里只包含简单选择器，暂不处理复合情况
@@ -40,12 +58,18 @@ function computeCSS(element) {
                 j++;
             }
         }
-        if(j > selectorParts.length)
+        if(j >= selectorParts.length)
             matched = true;
         
         if(matched) {
             //如果匹配到，我们要加入
-            console.log("Element ", element, " matched rule ", rule);
+            var computedStyle = element.computedStyle;
+            for(var declaration of rule.declarations) {
+                if(!computedStyle[declaration.property])
+                    computedStyle[declaration.property] = {};
+                computedStyle[declaration.property].value = declaration.value;
+            }
+            console.log(element.computedStyle);
         }
      }
 }
