@@ -10,8 +10,44 @@ let stack = [{ type: "document", children:[] }];
 let rules = [];
 function addCSSRules(text) {
     var ast = css.parse(text);
-    console.log(JSON.stringify(ast, null, "    "));
     rules.push(...ast.stylesheet.rules);
+}
+
+function match(element, selector) {
+
+}
+
+function computeCSS(element) {
+    //获取父元素序列
+    var elements = stack.slice().reverse();
+    if(element.computedStyle)
+        element.computedStyle = {};
+    
+    // toyBrowser假设一个复杂选择器里只包含简单选择器，暂不处理复合情况
+    for(let rule of rules) {
+        // get selector from rule, reverse order
+        var selectorParts = rule.selectors[0].split(' ').reverse();
+        
+        if(!match(element, selectorParts[0])) {
+            continue;
+        }
+
+        let matched = false;
+
+        var j = 1;
+        for(var i = 0; i < elements.length; i++) {
+            if(match(elements[i], selectorParts[j])) {
+                j++;
+            }
+        }
+        if(j > selectorParts.length)
+            matched = true;
+        
+        if(matched) {
+            //如果匹配到，我们要加入
+            console.log("Element ", element, " matched rule ", rule);
+        }
+     }
 }
 
 function emit(token) {
@@ -34,6 +70,8 @@ function emit(token) {
                 });
             }
         }
+
+        computeCSS(element);
 
         top.children.push(element);
         element.parent = top;
