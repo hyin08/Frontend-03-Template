@@ -1,5 +1,7 @@
 const css = require('css');
 const EOF = Symbol('EOF'); //EOF: End of file
+const layout = require('./layout.js');
+
 let currentToken = null;
 let currentAttribute = null;
 let currentTextNode = null;
@@ -145,6 +147,8 @@ function emit(token) {
             if(top.tagName == "style") {
                 addCSSRules(top.children[0].content);
             }
+            // flex布局需要知道子元素， 子元素发生在标签的结束标签之前，所以在这里调用layout函数
+            layout(top);
             stack.pop();
         }
         currentTextNode = null;
