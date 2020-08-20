@@ -120,7 +120,7 @@ function layout(element) {
         elementStyle[mainSize] = 0;
         for(var i = 0; i < items.length; i++) {
             var item = items[i];
-            var itemStyle = getStyle(item);
+            var itemStyle = getStyle(item);   //？视频里没有
             if(itemStyle[mainSize] !== null || itemStyle[mainSize] !== (void 0))
                 elementStyle[mainSize] = elementStyle[mainSize] + itemStyle[mainSize];
         }
@@ -143,7 +143,7 @@ function layout(element) {
 
         if(itemStyle.flex) { //flex属性，不是display: flex， 我们直接放入当前行
             flexLine.push(item); 
-        } else if(style.flexWrap === 'nowrap' && isAutoMainSize) { //nowrap，直接放入当前行
+        } else if(style.flexWrap === 'nowrap' && isAutoMainSize) { //nowrap，直接放入第一行
             mainSpace -= itemStyle[mainSize];
             if(itemStyle[crossSize] !== null && itemStyle[crossSize] !== (void 0))
                 crossSpace = Math.max(crossSpace, itemStyle[crossSize]); // 更新crossSpace,取最大的交叉轴尺寸
@@ -171,6 +171,96 @@ function layout(element) {
         }
     }
     flexLine.mainSpace = mainSpace;
+
+    if(style.flexWrap === 'nowrap' || isAutoMainSize) {
+        flexLine.crossSpace = (style[crossSize] !== undefined) ? style[crossSize] : crossSpace;
+    } else {
+        flexLine.crossSpace = crossSpace;
+    }
+
+    if(mainSpace < 0) {
+        // overflow (happens only if container is single line), scale every item
+        var scale = style[mainSize] / (style[mainSize] - mainSpace);
+        var currentMain = mainBase;
+        for(var i = 0; i < items.length; i++) {
+            var item = items[i];
+            var itemStyle = getStyle(item);
+
+            if(itemStyle.flex) {
+                itemStyle[mainSize] = 0;
+            }
+
+            //进行等比压缩
+            itemStyle[mainSize] = itemStyle[mainSize] * scale;
+
+            itemStyle[mainStart] = currentMain;
+            itemStyle[mainEnd] = currentMain + mainSign * itemStyle[mainSize];
+            currentMain = itemStyle[mainEnd];
+        }
+
+    } else {
+        // process each flex line
+        flexLines.forEach(function(items) { 
+            var mainSpace = items.mainSpace;
+            var flexTotal = 0;
+
+            for(var i = 0; i < items.length; i++) {
+                var item = items[i];
+                var itemStyle = getStyle(item);
+                
+                if(itemStyle.flex !== null && itemStyle.flex !== (void 0)) {
+                    flexTotal += itemStyle.flex;
+                    continue;
+                }
+            }
+
+            if(flexTotal > 0) {
+                //There is flexiable flex items
+                var currentMain = mainBase;
+                for(var i = 0; i < items.length; i++) {
+                    var item = items[i];
+                    var itemStyle = getStyle(item);
+
+                    if(itemStyle.flex) {
+                        itemStyle[mainSize] = (mainSpace / flexTotal) * itemStyle.flex;
+                    }
+                    itemStyle[mainStart] = currentMain;
+                    itemStyle[mainEnd] = currentMain + mainSign * itemStyle[mainSize];
+                    currentMain = itemStyle[mainEnd];
+                }
+            } else {
+                //There is no flexiable flex items, which means, justifyContent should work
+                if(style.justifyContent === 'flex-start') {
+                    var currentMain = mainBase;
+                    var step = 0;
+                }
+                if(style.justifyContent === 'flex-end') {
+                    var currentMain = mainSpace * mainSign + mainBase;
+                    var step = 0;
+                }
+                if(style.justifyContent === 'center') {
+                    var currentMain = mainSpace / 2 * mainSign + mainBase;
+                    var step = 0;
+                }
+                if(style.justifyContent === 'space-between') {
+                    var currentMain = mainBase;
+                    var step = mainSpace / (items.length - 1) * mainSign;
+                }
+                if(style.justifyContent === 'space-around') {
+                    var step = mainSpace / items.length * mainSign;
+                    var currentMain = step / 2 + mainBase;
+                }
+                for(var i = 0; i < items.length; i++) {
+                    var item = items[i];
+                    var itemStyle = getStyle(item); //? 视频里没有
+
+                    itemStyle[mainStart] = currentMain;
+                    itemStyle[mainEnd] = itemStyle[mainStart] + mainSign * itemStyle[mainSize];
+                    currentMain = itemStyle[mainEnd] + step;
+                }
+            }
+        })
+    }
 
     console.log(items);
 }
