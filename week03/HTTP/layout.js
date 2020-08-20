@@ -114,6 +114,65 @@ function layout(element) {
         crossBase = 0;
         crossSign = 1;
     }
+
+    var isAutoMainSize = false;
+    if(!style[mainSize]) { //auto sizing, 如果没有设置父元素mainSize，强行把所有子元素放入一行
+        elementStyle[mainSize] = 0;
+        for(var i = 0; i < items.length; i++) {
+            var item = items[i];
+            var itemStyle = getStyle(item);
+            if(itemStyle[mainSize] !== null || itemStyle[mainSize] !== (void 0))
+                elementStyle[mainSize] = elementStyle[mainSize] + itemStyle[mainSize];
+        }
+        isAutoMainSize = true;
+    }
+
+    var flexLine = [];
+    var flexLines = [flexLine];
+
+    var mainSpace = elementStyle[mainSize];
+    var crossSpace = 0;
+
+    for(var i = 0; i < items.length; i++) {
+        var item = items[i];
+        var itemStyle = getStyle(item);
+
+        if(itemStyle[mainSize] === null) {
+            itemStyle[mainSize] = 0;
+        }
+
+        if(itemStyle.flex) { //flex属性，不是display: flex， 我们直接放入当前行
+            flexLine.push(item); 
+        } else if(style.flexWrap === 'nowrap' && isAutoMainSize) { //nowrap，直接放入当前行
+            mainSpace -= itemStyle[mainSize];
+            if(itemStyle[crossSize] !== null && itemStyle[crossSize] !== (void 0))
+                crossSpace = Math.max(crossSpace, itemStyle[crossSize]); // 更新crossSpace,取最大的交叉轴尺寸
+            flexLine.push(item);
+        } else {
+            // 如果item主轴尺寸比父元素还大，压到跟父元素一样大
+            if(itemStyle[mainSize] > style[mainSize]) { 
+                itemStyle[mainSize] = style[mainSize];
+            }
+            if(mainSpace < itemStyle[mainSize]) {
+                //处理旧的flexLine, 旧的剩余主轴尺寸和交叉轴尺寸，方便后续计算
+                flexLine.mainSpace = mainSpace;
+                flexLine.crossSpace = crossSpace;
+                //创建新行，并将当前item放入
+                flexLine = [item];
+                flexLines.push(flexLine);
+                mainSpace = style[mainSize];
+                crossSpace = 0;
+            } else {
+                flexLine.push(item);
+            }
+            if(itemStyle[crossSize] !== null && itemStyle[crossSize] !== (void 0))
+                crossSpace = Math.max(crossSpace, itemStyle[crossSize]);
+            mainSpace -= itemStyle[mainSize];
+        }
+    }
+    flexLine.mainSpace = mainSpace;
+
+    console.log(items);
 }
 
 
