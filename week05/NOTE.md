@@ -1,5 +1,5 @@
 ## 为什么 first-letter 可以设置 float 之类的，而 first-line 不行呢？
-first-letter和first-line是在已经完成排版之后进行的处理。first-letter只是把第一个字母括起来进行处理，使用float之类的效率相对可以。而first-line由于浏览器宽度等不同，它控制住的元素数量也不同，如果使用float等设置，效率可能不好。
+first-letter和first-line是在已经完成排版之后进行的处理。first-letter只是把第一个字母括起来进行处理，使用float之类的性能相对可以。而first-line由于浏览器宽度等不同，它控制住的元素数量也不同，如果使用float等设置，性能可能不好。
 
 ## 学习笔记
 + 从CSS的总体结构出发，介绍了@rule，并着重学习@media，@keyframes，@fontface
