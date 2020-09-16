@@ -16,7 +16,7 @@
 
 <script>
     let pattern = [
-        [2, 0, 0],
+        [0, 2, 0],
         [0, 1, 0],
         [0, 0, 0]
     ];
@@ -110,12 +110,43 @@
                 let tmp = clone(pattern);
                 tmp[i][j] = color;
                 if(check(tmp, color)) {
-                    return true;
+                    return [j, i];
                 }
             }
         }
         return false;
     }
 
+    function bestChoice(pattern, color) {
+        let p;
+        if(p = willWin(pattern, color)) {
+            return {
+                point: p,
+                result: 1
+            }
+        }
+        let result = -2;
+        let point = null;
+        for(let i = 0; i < 3; i++) {
+            for(let j = 0; j < 3; j++) {
+                if(pattern[i][j])
+                    continue;
+                let tmp = clone(pattern);
+                tmp[i][j] = color;
+                let r = bestChoice(tmp, 3 - color).result;
+                if(-r > result) {
+                    result = -r;
+                    point = [j, i];
+                }
+            }
+        }
+        return {
+            point: point,
+            result: point ? result : 0
+        }
+    }
+
     show();
+
+    console.log(bestChoice(pattern, color));
 </script>
