@@ -1,0 +1,251 @@
+<style>
+    #board {
+        background-color: rgb(104, 104, 40);
+        width: 300px;
+
+    }
+
+    .cell {
+        width: 30px;
+        height: 30px;
+        display: inline-block;
+        position: relative;
+    }
+
+    .cell:before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        border-top: 1px solid black;
+        background-color: black;
+        width: 100%;
+        transform: translateY(-50%);
+    }
+
+    .cell:after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 50%;
+        border-left: 1px solid black;
+        background-color: black;
+        height: 100%;
+        transform: translateX(-50%);
+    }
+
+    .piece {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        border-radius: 10px;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 2;
+    }
+
+    .piece.black {
+        background-color: black;
+    }
+
+    .piece.white {
+        background-color: white;
+    }
+</style>
+
+<div id="board">
+</div>
+
+<script>
+    // set level 
+    let level = 1;
+    // set dimension
+    let row = 10;
+    // initialize 
+    let pieces = new Array(row * row);
+    pieces.fill(0, 0, row * row);
+
+    pieces[13] = 1;
+    pieces[14] = 2;
+    // color 1 -> black, 2 -> white
+    let color = 1;
+
+    function show() {
+        let board = document.getElementById('board');
+        board.innerHTML = '';
+
+        for(let i = 0; i < row; ++i) {
+            for(let j = 0; j < row; ++j) {
+                let cell = document.createElement('div');
+                cell.classList.add("cell");
+                if(pieces[i * row + j] == 1) {
+                    let piece = document.createElement('div');
+                    piece.classList.add("piece", "black");
+                    cell.appendChild(piece);
+                } else if(pieces[i * row + j] == 2) {
+                    let piece = document.createElement('div');
+                    piece.classList.add("piece", "white");
+                    cell.appendChild(piece);
+                } else {
+                    cell.addEventListener('click', () => userMove(j, i));
+                }
+                board.appendChild(cell);
+            }
+            board.appendChild(document.createElement('br'));
+        }
+    }
+
+    function userMove(x, y) {
+        pieces[y * row + x] = color;
+        show();
+        
+        if(check(pieces, x, y, color)) {
+            alert(color == 2 ? "White is the winner!" : "Black is the winner!");
+        }
+        color = 3 - color;
+
+        if(willWin(pieces, color)) {
+            console.log(color == 2 ? "White will win!" : "Black will win!")
+        }
+
+        // computerMove();
+    }
+
+    // function computerMove() {
+    //     let choice = bestChoice(pieces, color, level);
+    //     if(choice.point) {
+    //         pieces[choice.point[1] * row + choice.point[0]] = color;
+    //     }
+    //     if(check(pieces, choice.point[0], choice.point[1], color)) {
+    //         alert(color == 2 ? "White is the winner!" : "Black is the winner!");
+    //     }
+    //     color = 3 - color;
+    //     show();
+        
+    // }
+
+    function check(pieces, x, y, color) {
+        // row
+        {
+            let count = 1;
+            let i = x - 1;
+            while(i >= 0 && pieces[y * row + i] === color) {
+                count++;
+                i--;
+            }
+            if(count >= 5) return true;
+            i = x + 1;
+            while(i < row && pieces[y * row + i] === color) {
+                count++;
+                i++;
+            }
+            if(count >= 5) return true;
+        }
+        // column
+        {
+            let count = 1;
+            let i = y - 1;
+            while(i >= 0 && pieces[i * row + x] === color) {
+                count++;
+                i--;
+            }
+            if(count >= 5) return true;
+            i = y + 1;
+            while(i < row && pieces[i * row + x] === color) {
+                count++;
+                i++;
+            }
+            if(count >= 5) return true;
+        }
+        // diagonal 1
+        {
+            let count = 1;
+            let i = 1;
+            while(x - i >= 0 && y - i >= 0 && pieces[(y - i) * row + x - i] === color) {
+                count++;
+                i++;
+            }
+            if(count >= 5) return true;
+            i = 1;
+            while(x + i < row && y + i < row && pieces[(y + i) * row + x + i] === color) {
+                count++;
+                i++;
+            }
+            if(count >= 5) return true;
+        }
+        // diagonal 2
+        {
+            let count = 1;
+            let i = 1;
+            while(x - i >= 0 && y + i < row && pieces[(y + i) * row + x - i] === color) {
+                count++;
+                i++;
+            }
+            if(count >= 5) return true;
+            i = 1;
+            while(x + i < row && y - i >= 0 && pieces[(y - i) * row + x + i] === color) {
+                count++;
+                i++;
+            }
+            if(count >= 5) return true;
+        }
+        return false;
+    }
+
+    function clone(pieces) {
+        return Object.create(pieces);
+    }
+
+    // function willWin(pieces, color) {
+    //     for(let i = 0; i < row; i++) {
+    //         for(let j = 0; j < row; j++) {
+    //             if(pieces[i * row + j])
+    //                 continue;
+    //             let tmp = clone(pieces);
+    //             tmp[i * row + j] = color;
+    //             if(check(tmp, i, j, color)) {
+    //                 return [j, i];
+    //             }
+    //         }
+    //     }
+    //     return false;
+    // }
+
+    // function bestChoice(pieces, color, l) {
+    //     debugger;
+    //     let p;
+    //     if(p = willWin(pieces, color)) {
+    //         return {
+    //             point: p,
+    //             result: 1
+    //         }
+    //     }
+    //     if(l === 0) {
+    //         return {
+    //             result: 0
+    //         }
+    //     }
+    //     let result = -2;
+    //     let point = null;
+    //     for(let i = 0; i < row; i++) {
+    //         for(let j = 0; j < row; j++) {
+    //             if(pieces[i * row + j])
+    //                 continue;
+    //             let tmp = clone(pieces);
+    //             tmp[i * row + j] = color;
+    //             let r = bestChoice(tmp, 3 - color, l - 1).result;
+    //             if(-r > result) {
+    //                 result = -r;
+    //                 point = [j, i];
+    //             }
+    //         }
+    //     }
+    //     return {
+    //         result: point ? result : 0,
+    //         point: point,
+    //     }
+    // }
+
+    show();
+</script>
