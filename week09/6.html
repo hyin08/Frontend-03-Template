@@ -51,6 +51,62 @@
         }
     }
 
+    class Heap {
+        constructor(data, compare) {
+            debugger;
+            this.data = data.slice();
+            this.compare = compare;
+            this.heapify();
+        }
+
+        heapify() {
+            for(let i = Math.floor(this.data.length - 2) / 2; i >= 0; --i) {
+                this.siftDown(i);
+            }
+        }
+
+        siftUp(i) {
+            while(i > 0) {
+                let parent = Math.floor((i - 1) / 2);
+                if(this.compare(this.data[parent], this.data[i]) < 0) break;
+                this.swap(i, parent);
+                i = parent;
+            }
+        }
+
+        siftDown(i) {
+            while(2 * i + 1 < this.data.length) {
+                let index = (2 * i + 2) < this.data.length ? 
+                                (this.compare(this.data[2 * i + 1], this.data[2 * i + 2]) < 0 ?
+                                    2 * i + 1 : 2 * i + 2) :
+                                2 * i + 1;
+                if(this.compare(this.data[i], this.data[index]) < 0) break;
+                this.swap(i, index);
+                i = index;
+            }
+        }
+
+        swap(i, j) {
+            let tmp = this.data[i];
+            this.data[i] = this.data[j];
+            this.data[j] = tmp;
+        }
+
+        take() {
+            if(this.data.length == 0) return;
+            let res = this.data[0];
+            this.swap(0, this.data.length - 1);
+            this.data.pop();
+            this.siftDown(0);
+            return res;
+        }
+
+        give(v) {
+            this.data.push(v);
+            this.siftUp(this.data.length - 1);
+        }
+    }
+
     let map = localStorage['map'] ? JSON.parse(localStorage['map']) : Array(10000).fill(0);
 
     let container = document.getElementById('container');
@@ -94,9 +150,21 @@
     }
 
     async function findPath(map, start, end) {
-        debugger;
+        if(map[100 * start[1] + start[0]]) {
+            alert("start point is not reachable");
+            return null;
+        }
+
+        if(map[100 * end[1] + end[0]]) {
+            alert("end point is not reachable");
+            return null;
+        }
+        container.children[100 * start[1] + start[0]].style.backgroundColor = 'blue';
+        container.children[100 * end[1] + end[0]].style.backgroundColor = 'red';
+        map[100 * start[1] + start[0]] = 1;
+
         let table = Object.create(map);
-        let queue = new Sorted([start], (a, b) => distance(a) - distance(b));
+        let queue = new Heap([start], (a, b) => distance(a) - distance(b));
         console.log(queue);
         async function insert(x, y, pre) {
             if(x < 0 || x >= 100 || y < 0 || y >= 100)
@@ -117,6 +185,7 @@
             let [x, y] = queue.take();
             console.log(x, y);
             if(x === end[0] && y === end[1]) {
+                
                 let path = [];
                 
                 while(x != start[0] && y != start[1]) {
@@ -124,7 +193,8 @@
                     [x, y] = table[y * 100 + x];
                     container.children[y * 100 + x].style.backgroundColor = 'purple';
                 }
-
+                container.children[100 * start[1] + start[0]].style.backgroundColor = 'blue';
+                container.children[100 * end[1] + end[0]].style.backgroundColor = 'red';
                 return path;
             }
             await insert(x - 1, y, [x, y]);
