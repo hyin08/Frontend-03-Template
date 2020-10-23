@@ -1,6 +1,8 @@
 <script>
 
+    // callbacks: key -> object, value -> { key -> prop, value -> [callbacks] }
     let callbacks = new Map();
+    // reactivities: key -> object, value -> 对应的Proxy
     let reactivities = new Map();
 
     let useReactivities = [];
@@ -38,6 +40,7 @@
         }
     }
 
+    // 将普通的object包装成Proxy
     function reactive(object) {
         if(reactivities.has(object))
             return reactivities.get(object);
