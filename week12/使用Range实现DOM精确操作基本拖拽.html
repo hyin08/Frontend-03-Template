@@ -1,0 +1,31 @@
+<div id="draggable" style="width: 100px; height: 100px; background-color: pink;"></div>
+<script>
+    // 0. drag我们是有对应的事件dragdrop事件， 但是我们希望跟随鼠标进行移动，我们用mousedown、mousemove、mouseup来模拟
+    let draggable = document.getElementById("draggable");
+
+    // 4. 记录当前的translate的位置，需要在mousedown外面的作用域
+    let baseX = 0, baseY = 0;
+    draggable.addEventListener("mousedown", function(event){
+        // 1. 在mousedown里面监听mousemove和mouseup事件，只有我们鼠标按下去之后监听，才能在性能上和逻辑上正确.
+        // 如果mousemove在mousedown之外，那么只要鼠标移动，这个事件就触发了，即使用flag标记在mousedown没有发生的情况下也不触发mousemove，对性能也有一定影响
+        // 2. mousemove和mouseup是在document上监听，如果在draggable上监听，鼠标移动过快，可能会发生拖断现象
+        
+        // 3. 记录鼠标起始位置
+        let startX = event.clientX, startY = event.clientY;
+        
+        // mouseup来remove监听
+        let up = event => {
+            baseX = baseX + event.clientX - startX;
+            baseY = baseY + event.clientY - startY;
+            document.removeEventListener("mousemove", move);
+            document.removeEventListener("mouseup", up);
+        };
+
+        let move = event => {
+            console.log(event);
+            draggable.style.transform = `translate(${baseX + event.clientX - startX}px, ${baseY + event.clientY - startY}px)`;
+        }
+        document.addEventListener("mousemove", move);
+        document.addEventListener("mouseup", up);
+    }) 
+</script>
