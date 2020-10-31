@@ -1,84 +1,64 @@
-function createElement(type, attributes, ...children) {
-    let element;
-    if(typeof type === 'string') {
-        element = new ElementWrapper(type);
-    } else {
-        element = new type;
-    }
-    // 添加属性
-    for(let name in attributes) {
-        element.setAttribute(name, attributes[name]);
-    }
-    for(let child of children) {
-        // 对于文本节点，需要createTextNode再appendChild
-        if(typeof child === 'string') {
-            child = new TextWrapper(child);
-        }
-        element.appendChild(child);
-    }
-    return element;
-}
+import { Component, createElement } from './framework.js';
 
-// 添加一个ElementWrapper来实现对自定义标签的appendChild
-class ElementWrapper {
-    constructor(type) {
-        this.root = document.createElement(type);
-    }
-    setAttribute(name, value) {
-        this.root.setAttribute(name, value);
-    }
-
-    appendChild(child) {
-        child.mountTo(this.root);
-    }
-
-    mountTo(parent) {
-        parent.appendChild(this.root);
-    }
-}
-
-class TextWrapper {
-    constructor(content) {
-        this.root = document.createTextNode(content);
-    }
-    setAttribute(name, value) {
-        this.root.setAttribute(name, value);
-    }
-
-    appendChild(child) {
-        child.mountTo(this.root);
-    }
-
-    mountTo(parent) {
-        parent.appendChild(this.root);
-    }
-}
-
-class Div {
+class Carousel extends Component {
     constructor() {
-        this.root = document.createElement('div');
+        super();
+        this.attributes = Object.create(null);
     }
 
     setAttribute(name, value) {
-        this.root.setAttribute(name, value);
+        this.attributes[name] = value;
     }
 
-    appendChild(child) {
-        child.mountTo(this.root);
+    render() {
+        this.root = document.createElement('div');
+        this.root.classList.add('carousel');
+
+        for(let record of this.attributes.src) {
+            let child = document.createElement('div');
+            child.style.backgroundImage = `url('${record}')`;
+            this.root.appendChild(child);
+        }
+
+        // 自动播放
+        // let current = 0;   
+        let currentIndex = 0;
+        setInterval(() => {
+            let children = this.root.children;
+            // current = (current + 1) % children.length;   // 这种方法会从最后一张往前返回第一张
+
+            let nextIndex = (currentIndex + 1) % children.length;
+            let current = children[currentIndex];
+            let next = children[nextIndex];
+
+            // 将next放在初始位置（current后面），这里需要将transition设为none
+            next.style.transition = 'none';
+            next.style.transform = `translateX(${100 - nextIndex * 100}%)`;
+
+            setTimeout(() => {
+                // 开启transition，current和next进行动画
+                next.style.transition = '';
+                current.style.transform = `translateX(${-100 - currentIndex * 100}%)`;
+                next.style.transform = `translateX(${-nextIndex * 100}%)`;
+                // 更新currentIndex
+                currentIndex = nextIndex;
+            }, 16);
+        }, 3000);
+        return this.root;
     }
 
+    // 在mountTo中调render(),保证render在setAttribute之后
     mountTo(parent) {
-        parent.appendChild(this.root);
+        parent.appendChild(this.render());
     }
-
 }
 
-let a = <Div id="a">
-    <span>a</span>
-    <span>b</span>
-    <span>c</span>
-</Div>;
+let d = [
+    "https://static001.geekbang.org/resource/image/bb/21/bb38fb7c1073eaee1755f81131f11d21.jpg",
+    "https://static001.geekbang.org/resource/image/1b/21/1b809d9a2bdf3ecc481322d7c9223c21.jpg",
+    "https://static001.geekbang.org/resource/image/b6/4f/b6d65b2f12646a9fd6b8cb2b020d754f.jpg",
+    "https://static001.geekbang.org/resource/image/73/e4/730ea9c393def7975deceb48b3eb6fe4.jpg"
+];
 
-// document.body.appendChild(a);
-//为满足自定义标签，在class里实现mountTo
+let a = <Carousel src={d} />;
 a.mountTo(document.body);
