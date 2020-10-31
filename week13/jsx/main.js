@@ -20,14 +20,38 @@ class Carousel extends Component {
             this.root.appendChild(child);
         }
 
+
+        // the index of the image in the viewport
+        let position = 0;
         this.root.addEventListener('mousedown', event => {
             console.log("mousedown");
+            let children = this.root.children;
+            let startX = event.clientX;
             let move = event => {
-                console.log("mousemove");
+                let x = event.clientX - startX;
+
+                let current = position - ((x - x % 500) / 500);
+
+                // 只需要处理current及相邻的图片
+                for(let offset of [-1, 0, 1]) {
+                    let pos = (current + offset + children.length) % children.length;
+                    children[pos].style.transition = 'none';
+                    children[pos].style.transform = `translateX(${- pos * 500 + offset * 500 + x % 500}px)`;
+                }
             }
 
             let up = event => {
-                console.log("mouseup");
+                let x = event.clientX - startX;
+
+                position = position - Math.round(x / 500);
+
+                // [0, - Math.sign(Math.round(x / 500) - x + 250 * Math.sign(x))] 来处理图片在拖拽过程中飞来飞去的问题
+                for(let offset of [0, - Math.sign(Math.round(x / 500) - x + 250 * Math.sign(x))]) {
+                    let pos = (position + offset + children.length) % children.length;
+                    // 开启transition
+                    children[pos].style.transition = '';
+                    children[pos].style.transform = `translateX(${- pos * 500 + offset * 500}px)`;
+                }
                 document.removeEventListener('mousemove', move);
                 document.removeEventListener('mouseup', up);
             }
