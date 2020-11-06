@@ -1,6 +1,6 @@
 学习笔记
 # 手势与动画
-## 初步建立动画和时间线
+## 1. 初步建立动画和时间线
 ### JavaScript处理帧的几种方式
 + setInterval: 
 ```
@@ -24,10 +24,10 @@ let tick = () => {
   - constructor接受如下参数： `object, property, startValue, endValue, duration, timingFunction`
   - receive函数来改变属性
 
-## 设计时间线的更新
+## 2. 设计时间线的更新
 
-## 给动画添加暂停和重启功能
+## 3. 给动画添加暂停和重启功能
 
-## 完善动画的其他功能
+## 4. 完善动画的其他功能
 
-## 对时间线进行状态管理
+## 5. 对时间线进行状态管理
