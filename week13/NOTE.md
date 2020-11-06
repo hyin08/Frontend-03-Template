@@ -48,6 +48,13 @@
   
  # 轮播组件
  ## 一
- 1. 创建一个Component class放在framework.js, 并让ElementWrapper和TextWrapper entend这个Component clas2
+ 1. 创建一个Component class放在framework.js, 并让ElementWrapper和TextWrapper entend这个Component class
  2. 我们新建的标签都会继承Component，对于Carousel，我们传进来的attributes是一个image url的数组，render的时候将他们作为子节点
  3. 我们在mountTo中调用render函数，保证render在setAttribute之后调用
+ ## 自动播放
+ 1. 在处理轮播的时候，不需要将所有的children都进行transform, 只需要将current和next的transform
+ 2. 先将next放在初始位置（current后面），这里需要将transition设为none， 然后开启transition，current和next进行动画
+ 3. 需要注意最后一张图之后回到第一张图，采用`let nextIndex = (currentIndex + 1) % children.length;`处理
+ ## 手动拖拽
+ 1. 在当前element监听mousedown事件，之后在document监听mousemove和mouseup事件
+ 
