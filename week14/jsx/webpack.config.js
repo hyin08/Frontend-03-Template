@@ -1,5 +1,10 @@
+const path = require('path');
 module.exports = {
-    entry: "./main.js",
+    entry: "./animation-demo.js",
+    output: {
+        path: path.resolve(__dirname, 'dist'),
+        filename: 'animation-demo.js'
+      },
     module: {
         rules: [
             { 
