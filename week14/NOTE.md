@@ -76,3 +76,10 @@ let tick = () => {
 + 重置所有参数
 
 ## 五. 对时间线进行状态管理
+### 处理第三步中“不能多次按pause键”和“resume键不能在pause键前先按”的问题
+加入状态管理  
+construction : "inited"  
+start : "inited" -> "started"  
+pause : "started" -> "paused"  
+resume : "paused" -> "started"  
+reset: -> "inited"  
