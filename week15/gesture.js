@@ -97,10 +97,17 @@ let start = (point, context) => {
     // console.log("start", point.clientX, point.clientY);
     // 记录初始位置，以计算移动10px -> pan start
     context.startX = point.clientX, context.startY = point.clientY;
+    // 存储多个点，来计算速度
+    context.points = [{
+        t: Date.now(),
+        x: point.clientX,
+        y: point.clientY
+    }];
 
     context.isTap = true;
     context.isPan = false;
     context.isPress = false;
+    context.isFlick = false;
     // 0.5s -> press start
     context.handler = setTimeout(() => {
         context.isTap = false;
@@ -111,6 +118,7 @@ let start = (point, context) => {
     }, 500);
 }
 
+// flick事件需要计算速度，我们存储一段时间内多个点，来计算平均速度，减少误差
 let move = (point, context) => {
     // console.log("move", point.clientX, point.clientY);
     let dx = point.clientX - context.startX, dy = point.clientY - context.startY;
@@ -128,6 +136,14 @@ let move = (point, context) => {
         console.log("pan");
     }
 
+    // 只保留最近0.5s内的点来计算速度
+    context.points = context.points.filter(point => Date.now() - point.t < 500)
+    
+    context.points.push({
+        t: Date.now(),
+        x: point.clientX,
+        y: point.clientY
+    })
 }
 
 let end = (point, context) => {
@@ -143,6 +159,23 @@ let end = (point, context) => {
 
     if(context.isPress) {
         console.log("pressend");
+    }
+    // 结束时计算速度, 如果最后不动，v = 0
+    context.points = context.points.filter(point => Date.now() - point.t < 500);
+    let d, v;
+    if(!context.points.length){
+        v = 0;
+    } else {
+        d = Math.sqrt((point.clientX - context.points[0].x) ** 2 + 
+            (point.clientY - context.points[0].y) ** 2);
+        v = d / (Date.now() - context.points[0].t);
+    }
+    
+    if(v > 1.5) {
+        console.log("flick");
+        context.isFlick = true;
+    } else {
+        context.isFlick = false;
     }
     // console.log("end", point.clientX, point.clientY);
 }
