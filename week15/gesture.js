@@ -1,44 +1,80 @@
 let element = document.documentElement;
 
+let isListeningMouse = false;
 element.addEventListener('mousedown', event => {
-    start(event);
+    
+    let context = Object.create(null);
+    contexts.set("mouse" + (1 << event.button), context);
+    start(event, context);
 
     let mousemove = event => {
         // console.log(event.clientX, event.clientY);
-        move(event);
+        // move没有event.button, 有event.buttons,表示哪些键(5个键）被按下 e.g. 0b11111
+        let button = 1;
+        while(button <= event.buttons) {
+            if(button & event.buttons) {
+                // order of buttons  & button property are not same
+                let key;
+                if(button === 2)
+                    key = 4;
+                else if(button === 4)
+                    key = 2;
+                else
+                    key = button;
+                let context = contexts.get("mouse" + key);
+                move(event, context);
+            }
+            button = button << 1;
+        }
     }
 
     let mouseup = event => {
-        end(event);
-        element.removeEventListener('mousemove', mousemove);
-        element.removeEventListener('mouseup', mouseup);
+        let context = contexts.get("mouse" + (1 << event.button));
+        end(event, context);
+        contexts.delete("mouse" + (1 << event.button));
+
+        // 判断是否所有按键都已松开
+        if(event.buttons === 0) {
+            element.removeEventListener('mousemove', mousemove);
+            element.removeEventListener('mouseup', mouseup);
+            isListeningMouse = false;
+        }
     }
-    element.addEventListener('mousemove', mousemove);
-    element.addEventListener('mouseup', mouseup);
+    // 避免多个按键按下后，重复监听
+    if(!isListeningMouse) {
+        element.addEventListener('mousemove', mousemove);
+        element.addEventListener('mouseup', mouseup);
+        isListeningMouse = true;
+    }
 })
 
 // touch事件一旦start以后，会同时触发move，所以不需要像鼠标那样在mousedown之后触发move
-
+let contexts = new Map(); // 多点触发，存储在一个map里
 element.addEventListener('touchstart', event => {
     // event跟mouse里的不一样，里面有多个触点
     // console.log(event.changedTouches);
     for(let touch of event.changedTouches) {
         // console.log("start", touch.clientX, touch.clientY);
-        start(touch);
+        let context = Object.create(null);
+        contexts.set(touch.identifier, context);
+        start(touch, context);
     }
 })
 
 element.addEventListener('touchmove', event => {
     for(let touch of event.changedTouches) {
         // console.log("move", touch.clientX, touch.clientY);
-        move(touch);
+        let context = contexts.get(touch.identifier);
+        move(touch, context);
     }
 })
 
 element.addEventListener('touchend', event => {
     for(let touch of event.changedTouches) {
         // console.log("end", touch.clientX, touch.clientY);
-        end(touch);
+        let context = contexts.get(touch.identifier);
+        end(touch, context);
+        contexts.delete(touch.identifier);
     }
 })
 
@@ -46,69 +82,71 @@ element.addEventListener('touchend', event => {
 element.addEventListener('touchcancel', event => {
     for(let touch of event.changedTouches) {
         // console.log("cancel", touch.clientX, touch.clientY);
-        cancel(touch);
+        let context = contexts.get(touch.identifier);
+        cancel(touch, context);
+        contexts.delete(touch.identifier);
     }
 })
 
 
 // 对鼠标和touch进行统一的抽象
-let handler;
-let startX, startY;
-let isPan = false, isTap = true, isPress = false;
-let start = (point) => {
+// let handler;
+// let startX, startY;
+// let isPan = false, isTap = true, isPress = false;
+let start = (point, context) => {
     // console.log("start", point.clientX, point.clientY);
     // 记录初始位置，以计算移动10px -> pan start
-    startX = point.clientX, startY = point.clientY;
+    context.startX = point.clientX, context.startY = point.clientY;
 
-    isTap = true;
-    isPan = false;
-    isPress = false;
+    context.isTap = true;
+    context.isPan = false;
+    context.isPress = false;
     // 0.5s -> press start
-    handler = setTimeout(() => {
-        isTap = false;
-        isPan = false;
-        isPress = true;
-        handler = null;
+    context.handler = setTimeout(() => {
+        context.isTap = false;
+        context.isPan = false;
+        context.isPress = true;
+        context.handler = null;
         console.log("press");
     }, 500);
 }
 
-let move = (point) => {
+let move = (point, context) => {
     // console.log("move", point.clientX, point.clientY);
-    let dx = point.clientX - startX, dy = point.clientY - startY;
+    let dx = point.clientX - context.startX, dy = point.clientY - context.startY;
     // 处理10px的逻辑
-    if(!isPan && dx ** 2 + dy ** 2 > 100) {
-        isTap = false;
-        isPan = true;
-        isPress = false;
+    if(!context.isPan && dx ** 2 + dy ** 2 > 100) {
+        context.isTap = false;
+        context.isPan = true;
+        context.isPress = false;
         console.log("panstart");
-        clearTimeout(handler);
+        clearTimeout(context.handler);
     }
     
-    if(isPan) {
+    if(context.isPan) {
         console.log(dx, dy);
         console.log("pan");
     }
 
 }
 
-let end = (point) => {
-    if(isTap) {
+let end = (point, context) => {
+    if(context.isTap) {
         console.log("tap");
-        clearTimeout(handler);
+        clearTimeout(context.handler);
     }
 
-    if(isPan) {
+    if(context.isPan) {
         console.log("panend");
     }
 
-    if(isPress) {
+    if(context.isPress) {
         console.log("pressend");
     }
     // console.log("end", point.clientX, point.clientY);
 }
 
-let cancel = (point) => {
-    clearTimeout(handler);
+let cancel = (point, context) => {
+    clearTimeout(context.handler);
     // console.log("cancel", point.clientX, point.clientY);
 }
