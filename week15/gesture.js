@@ -35,15 +35,15 @@ element.addEventListener('mousedown', event => {
 
         // 判断是否所有按键都已松开
         if(event.buttons === 0) {
-            element.removeEventListener('mousemove', mousemove);
-            element.removeEventListener('mouseup', mouseup);
+            document.removeEventListener('mousemove', mousemove);
+            document.removeEventListener('mouseup', mouseup);
             isListeningMouse = false;
         }
     }
     // 避免多个按键按下后，重复监听
     if(!isListeningMouse) {
-        element.addEventListener('mousemove', mousemove);
-        element.addEventListener('mouseup', mouseup);
+        document.addEventListener('mousemove', mousemove);
+        document.addEventListener('mouseup', mouseup);
         isListeningMouse = true;
     }
 })
@@ -133,6 +133,7 @@ let move = (point, context) => {
 let end = (point, context) => {
     if(context.isTap) {
         console.log("tap");
+        dispatch("tap", {});
         clearTimeout(context.handler);
     }
 
@@ -149,4 +150,13 @@ let end = (point, context) => {
 let cancel = (point, context) => {
     clearTimeout(context.handler);
     // console.log("cancel", point.clientX, point.clientY);
+}
+
+
+function dispatch(type, properties) {
+    let event = new Event(type);
+    for(let name in properties) {
+        event[name] = properties[name];
+    }
+    element.dispatchEvent(event);
 }
