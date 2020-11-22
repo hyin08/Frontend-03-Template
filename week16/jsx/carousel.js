@@ -1,25 +1,22 @@
-import { Component } from './framework.js';
+import { Component, STATE, ATTRIBUTES } from './framework.js';
 import { enableGesture } from './gesture.js';
 import { Timeline, Animation } from './animation.js';
 import { ease } from './ease.js';
 
+export { STATE, ATTRIBUTES } from './framework.js';
+
 export class Carousel extends Component {
     constructor() {
         super();
-        this.attributes = Object.create(null);
-    }
-
-    setAttribute(name, value) {
-        this.attributes[name] = value;
     }
 
     render() {
         this.root = document.createElement('div');
         this.root.classList.add('carousel');
 
-        for (let record of this.attributes.src) {
+        for (let record of this[ATTRIBUTES].src) {
             let child = document.createElement('div');
-            child.style.backgroundImage = `url('${record}')`;
+            child.style.backgroundImage = `url('${record.img}')`;
             this.root.appendChild(child);
         }
         // 1. 使用gesture库
@@ -34,7 +31,7 @@ export class Carousel extends Component {
         let children = this.root.children;
 
         // the index of the image in the viewport
-        let position = 0;
+        this[STATE].position = 0;
         // 5.1, 用来计算偏移量
         let t = 0;
         let ax = 0;
@@ -45,14 +42,25 @@ export class Carousel extends Component {
         this.root.addEventListener('start', event => {
             timeline.pause();
             clearInterval(handler);
-            let progress = (Date.now() - t) / 1500; // 1500 为动画时长
-            ax = ease(progress) * 500 - 500;
+            if(Date.now() - t < 1500) {
+                let progress = (Date.now() - t) / 1500; // 1500 为动画时长
+                ax = ease(progress) * 500 - 500;
+            } else {
+                ax = 0;
+            }
+        })
+
+        this.root.addEventListener('tap', event => {
+            this.triggerEvent('click', {
+                data: this[ATTRIBUTES].src[this[STATE].position],
+                position: this[STATE].position
+            });
         })
 
         // 2. pan事件来拖拽
         this.root.addEventListener('pan', event => {
             let x = event.clientX - event.startX - ax;
-            let current = position - ((x - x % 500) / 500);
+            let current = this[STATE].position - ((x - x % 500) / 500);
             // 只需要处理current及相邻的图片
             for (let offset of [-1, 0, 1]) {
                 let pos = current + offset;
@@ -67,10 +75,8 @@ export class Carousel extends Component {
             timeline.reset();
             timeline.start();
             handler = setInterval(nextPicture, 3000);
-            // 6. 需要重置时间， 来重置progress，视频里没有，为什么？
-            t = Date.now();
             let x = event.clientX - event.startX - ax;
-            let current = position - ((x - x % 500) / 500);
+            let current = this[STATE].position - ((x - x % 500) / 500);
 
             let direction = Math.round((x % 500) / 500);
 
@@ -94,9 +100,10 @@ export class Carousel extends Component {
                     - pos * 500 + offset * 500 + direction * 500, 
                     1500, 0, ease, v => `translateX(${v}px)`));
             }
-            position = position - ((x - x % 500) / 500) - direction;
-            position = (position % children.length + children.length) % children.length;
-            // console.log(position, direction, x);
+            this[STATE].position = this[STATE].position - ((x - x % 500) / 500) - direction;
+            this[STATE].position = (this[STATE].position % children.length + children.length) % children.length;
+            
+            this.triggerEvent("change", {position: this[STATE].position});
         })
 
         // 3. 使用timeline来实现轮播，
@@ -104,8 +111,8 @@ export class Carousel extends Component {
             let children = this.root.children;
             // current = (current + 1) % children.length;   // 这种方法会从最后一张往前返回第一张
             // position = ((position) % children.length + children.length) % children.length;
-            let nextIndex = (position + 1) % children.length;
-            let current = children[position];
+            let nextIndex = (this[STATE].position + 1) % children.length;
+            let current = children[this[STATE].position];
             let next = children[nextIndex];
 
             t = Date.now();
@@ -115,11 +122,14 @@ export class Carousel extends Component {
 
             // 4. 往timeline加animation， 替换掉setTimeout
             timeline.add(new Animation(current.style, "transform", 
-                - position * 500, -500 - position * 500, 1500, 0, ease, v => `translateX(${v}px)`));
+                - this[STATE].position * 500, -500 - this[STATE].position * 500, 1500, 0, ease, v => `translateX(${v}px)`));
             timeline.add(new Animation(next.style, "transform", 
                 500 - nextIndex * 500, - nextIndex * 500, 1500, 0, ease, v => `translateX(${v}px)`));
 
-            position = nextIndex;
+            
+            this[STATE].position = nextIndex;
+
+            this.triggerEvent("change", {position: this[STATE].position});
             // setTimeout(() => {
             //     // 开启transition，current和next进行动画
             //     next.style.transition = '';
@@ -196,10 +206,5 @@ export class Carousel extends Component {
         }, 3000);
         */
         return this.root;
-    }
-
-    // 在mountTo中调render(),保证render在setAttribute之后
-    mountTo(parent) {
-        parent.appendChild(this.render());
     }
 }
