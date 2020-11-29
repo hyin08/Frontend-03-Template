@@ -2,3 +2,8 @@
 /toolchain/package-lock.json
 /demo/node_modules
 /demo/package-lock.json
+
+/generator-vue/node_modules
+/generator-vue/package-lock.json
+/vue-demo/node_modules
+/vue-demo/package-lock.json
