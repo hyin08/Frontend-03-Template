@@ -28,3 +28,4 @@ npm i babel-plugin-istanbul @istanbuljs/nyc-config-babel --save-dev
 - %Lines: > 90%
 
 # 所有工具与generator的集成
+将本节课的mocha， nyc等加入generator
