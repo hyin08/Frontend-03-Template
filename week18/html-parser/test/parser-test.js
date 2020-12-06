@@ -49,6 +49,11 @@ describe('parse html: ', function() {
         assert.strictEqual(tree.children.length, 1);
         assert.strictEqual(tree.children[0].children.length, 0);
     });
+    it('<a/>', function () {
+        let tree = parseHTML('<a/>');
+        assert.strictEqual(tree.children.length, 1);
+        assert.strictEqual(tree.children[0].children.length, 0);
+    });
     it('<A /> upper case', function () {
         let tree = parseHTML('<A />');
         assert.strictEqual(tree.children.length, 1);
@@ -63,6 +68,9 @@ describe('parse html: ', function() {
         let tree = parseHTML('<div>test</div>');
         assert.strictEqual(tree.children.length, 1);
         assert.strictEqual(tree.children[0].children.length, 1);
+    });
+    it('<div>test</p>', function () {
+        assert.throws(() => parseHTML('<div>test</p>'), Error, "Tag start end doesn't match");
     });
     it(`compute css`, function () {
         let tree = parseHTML(`<head><style>
@@ -80,6 +88,19 @@ describe('parse html: ', function() {
         width:500px;
     }</style></head><body>
         <div id="container"></div>
+    </body>`);
+        assert.strictEqual(tree.children.length, 2);
+        assert.strictEqual(tree.children[0].children.length, 1);
+    });
+    it(`compute css 3`, function () {
+        let tree = parseHTML(`<head><style>
+    .a {
+        width:500px;
+    }
+    .b {
+        height: 100px;
+    }</style></head><body>
+        <div class="a b"></div>
     </body>`);
         assert.strictEqual(tree.children.length, 2);
         assert.strictEqual(tree.children[0].children.length, 1);
