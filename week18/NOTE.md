@@ -23,3 +23,8 @@ npm i babel-plugin-istanbul @istanbuljs/nyc-config-babel --save-dev
 ```
 
 # 对html-parser进行单元测试
+根据代码的function不断补充test，来达到目标：(尚未完成）
+- %Funcs: 100% 
+- %Lines: > 90%
+
+# 所有工具与generator的集成
