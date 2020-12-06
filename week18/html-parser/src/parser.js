@@ -56,7 +56,7 @@ function compare(sp1, sp2) {
     if(sp1[0] - sp2[0])
         return sp1[0] - sp2[0];
     if(sp1[1] - sp2[1])
-        return sp1[0] - sp2[0];
+        return sp1[1] - sp2[1];
     if(sp1[2] - sp2[2])
         return sp1[2] - sp2[2];
 
@@ -191,7 +191,11 @@ function tagOpen(c) {
         }
         return tagName(c);
     } else {
-        return;
+        emit({
+            type: "text",
+            content: c,
+        })
+        return data;
     }
 }
 
@@ -376,6 +380,10 @@ function selfClosingStartTag(c) {
 
 
 export function parseHTML(html) {
+    currentToken = null;
+    currentAttribute = null;
+    currentTextNode = null;
+    stack = [{ type: "document", children:[] }];
     let state = data;
     for(let c of html) {
         state = state(c);
