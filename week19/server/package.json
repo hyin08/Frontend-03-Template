@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
+    "publish": "scp -r -P 8022 ./* haojie@127.0.0.1:/home/haojie/server",
     "start": "node ./bin/www"
   },
   "dependencies": {
