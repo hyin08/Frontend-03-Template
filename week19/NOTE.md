@@ -27,5 +27,14 @@ https://nodejs.org/api/stream.html#stream_class_stream_writable
 ## 多文件上传
 archiver进行压缩， unzipper进行解压
 
+# 用GitHub oAuth做一个登录实例
+- 新建一个GitHub App： toy-publish
+
+- GitHub oAuth steps： https://developer.github.com/apps/building-oauth-apps/authorizing-oauth-apps/  
+  1. 在publish-tool中， 打开 `https://github.com/login/oauth/authorize?client_id=#{client_id}` 登录授权，GitHub返回code到redirect的URL
+  2. 在publish-server中，接收code, 用code + client_id + client_secret 换 token, 之后显示一个publish的link， link到publish-tool的server
+  3. 在publish-tool中，发送包含token的请求到publish-server 进行publish
+  4. 在publish-server中，用token获取用户信息，检查权限，接收发布
+
 
 
