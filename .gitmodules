@@ -1,0 +1,3 @@
+[submodule "week20/git-demo"]
+	path = week20/git-demo
+	url = git@github.com:hyin08/git-demo.git
